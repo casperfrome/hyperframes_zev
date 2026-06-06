@@ -1,0 +1,4 @@
+interface:
+  display_name: "HyperFrames Zev"
+  short_description: "Local HyperFrames workbench video pipeline"
+  default_prompt: "Use $hyperframes-zev to create and render a narrated HyperFrames video in the local workbench."

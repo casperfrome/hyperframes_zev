@@ -1,116 +1,126 @@
-# hyperframes_zev
+# hyperframes-zev
 
-> Script-first, black-screen-proof HyperFrames video pipeline — works from **Claude Code** and **Codex**.
+Script-first, black-screen-proof HyperFrames video workflow for Claude Code and Codex.
 
-Produces a finished narrated + captioned MP4 in a local [HyperFrames](https://www.npmjs.com/package/hyperframes) Video Workbench.  
-It always drafts a script and waits for your approval **before** any TTS or render — a 30-second review up front beats re-rendering minutes of wrong content.
+The canonical skill lives at `skills/hyperframes-zev/`. Installers copy from that single source so the helper scripts and references cannot drift between agents. The old Codex slash command `/hyperframes_zev_v2` is kept only as a compatibility shim that points to `$hyperframes-zev`.
 
-Then it synthesizes end-to-end: Chinese DashScope voiceover → character-weighted captions → GSAP one-root-timeline animation → mandatory not-black frame check → final MP4.
+## What It Does
 
----
+This skill produces narrated or captioned MP4s in a local HyperFrames Video Workbench. It drafts the script first, waits for approval, then runs the synthesis path:
 
-## Why it exists
+`DashScope TTS -> deterministic captions -> assemble timing -> one-root GSAP composition -> structural checks -> draft frame check -> final render`
 
-The HyperFrames runtime (v0.6.x) renders a **fully black video** for two easy-to-hit composition mistakes — and `lint` / `validate` / `inspect` all *pass* on the black output.
+It also guards the two runtime mistakes that can produce fully black renders even when `lint`, `validate`, and `inspect` pass.
 
-This project encodes both fixes as hard rules, adds a `check.mjs` structural guard, copy-paste timing via `assemble.mjs`, and four ready-made palettes so every video doesn't look identical.
+## Repo Layout
 
-See [`references/runtime-rules.md`](claude-code/hyperframes_zev_v2/references/runtime-rules.md) for the full analysis.
-
----
-
-## The two black-screen Non-Negotiables
-
-| # | Rule | Why |
-|---|------|-----|
-| 1 | **Never set `display:none` on `.clip`** | The runtime only toggles `style.visibility`; `display:none` removes elements from layout forever → black |
-| 2 | **One root `gsap.timeline`, absolute times, keyed to the root `data-composition-id`** | The runtime seeks exactly one (longest) timeline to global time — per-scene timelines never play |
-
-A clean `lint`/`validate`/`inspect` is necessary but **not sufficient** — always eyeball a real rendered frame.
-
----
-
-## Repo layout
-
-```
-claude-code/hyperframes_zev_v2/   Drop-in Claude Code skill  (SKILL.md + references/ + scripts/)
-codex/                            Codex edition  (prompts/ slash command + identical references/ + scripts/)
-install/                          One-shot installers for both agents
+```text
+skills/hyperframes-zev/       Canonical skill, scripts, references, and agent metadata
+codex/prompts/                Legacy /hyperframes_zev_v2 shim
+install/                      Codex and Claude Code installers
+tools/validate.mjs            Repo contract validation
 ```
 
-`claude-code/` and `codex/` each carry a **complete, self-contained** copy of `references/` and `scripts/` — the two copies are kept byte-identical.
-
----
+The old `claude-code/` and `codex/scripts` / `codex/references` copies are intentionally not maintained.
 
 ## Install
 
-### Claude Code
+### Windows One-Line Install
+
+Codex:
 
 ```powershell
-# Windows
-./install/install-claude.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/casperfrome/hyperframes_zev/master/install/install.ps1'))) -Target codex -Force"
 ```
+
+Claude Code:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/casperfrome/hyperframes_zev/master/install/install.ps1'))) -Target claude -Force"
+```
+
+Both Codex and Claude Code:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/casperfrome/hyperframes_zev/master/install/install.ps1'))) -Target all -Force"
+```
+
+The remote installer downloads the GitHub archive, so Windows users do not need Git or a local clone. It defaults to `casperfrome/hyperframes_zev` on `master`; installer maintainers can override that with `-Repo owner/name` and `-Ref branch-or-tag`.
+
+### Local Install
+
+#### Codex
+
+```powershell
+./install/install-codex.ps1 -Force
+```
+
 ```bash
-# macOS / Linux
-bash ./install/install-claude.sh
+bash ./install/install-codex.sh --force
 ```
 
-Copies `claude-code/hyperframes_zev_v2/` into `~/.claude/skills/`. Then invoke in Claude Code:
+Installs:
 
+- `~/.codex/skills/hyperframes-zev`
+- `~/.codex/prompts/hyperframes_zev_v2.md` as a legacy shim
+
+Use:
+
+```text
+$hyperframes-zev
 ```
+
+Legacy:
+
+```text
 /hyperframes_zev_v2
 ```
 
-### Codex
+#### Claude Code
 
 ```powershell
-./install/install-codex.ps1
+./install/install-claude.ps1 -Force
 ```
+
 ```bash
-bash ./install/install-codex.sh
+bash ./install/install-claude.sh --force
 ```
 
-Copies `codex/prompts/hyperframes_zev_v2.md` into `~/.codex/prompts/` and sets **`HF_ZEV_HOME`** to this repo's `codex/` folder (so the prompt can find its bundled `references/` and `scripts/`). Then in Codex:
+Installs `~/.claude/skills/hyperframes-zev` and a legacy alias folder.
 
+## Environment
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `HF_WORKBENCH` | Recommended | Path to the HyperFrames workbench repo containing `workspace/`, `server/`, `web/`, `.env`, and `test_videos/`. Defaults to `D:\AllPythonProjects\hyperframes_test_260529` if unset. |
+| `DASHSCOPE_API_KEY` | Required for narrated videos | Put it in the workbench repo `.env`. |
+| `HF_ZEV_HOME` | Deprecated | No longer required for new installs. Installers leave an existing value unchanged. |
+
+The bundled scripts require Node.js plus `ffmpeg` and `ffprobe` on `PATH`. Python is only used for skill validation in this repo; use `D:\PythonVenv\Scripts\python.exe`.
+
+## Validate
+
+```powershell
+node tools/validate.mjs
+$env:PYTHONUTF8='1'
+& 'D:\PythonVenv\Scripts\python.exe' 'C:\Users\zevro\.codex\skills\.system\skill-creator\scripts\quick_validate.py' 'skills\hyperframes-zev'
+node --check skills\hyperframes-zev\scripts\tts.mjs
+node --check skills\hyperframes-zev\scripts\captions.mjs
+node --check skills\hyperframes-zev\scripts\assemble.mjs
+node --check skills\hyperframes-zev\scripts\check.mjs
+node --check skills\hyperframes-zev\scripts\preflight.mjs
 ```
-/hyperframes_zev_v2
-```
 
----
+## Included Helpers
 
-## Environment variables
-
-| Variable | Required | Default / note |
-|----------|----------|----------------|
-| `HF_WORKBENCH` | **yes** | Path to your HyperFrames Workbench repo (`workspace/`, `server/`, `web/`, `test_videos/`, `.env`). Author's default: `D:\AllPythonProjects\hyperframes_test_260529`. Other users: `setx HF_WORKBENCH <your path>` |
-| `DASHSCOPE_API_KEY` | yes (narrated video) | DashScope key for `qwen3-tts-flash`. Put it in the **workbench repo's** `.env` — the scripts find it automatically |
-| `HF_ZEV_HOME` | Codex only | Points to this repo's `codex/` folder so the prompt can reach `references/` and `scripts/`. Set automatically by `install-codex` |
-
-HyperFrames CLI pinned to **`hyperframes@0.6.56`**. The four `.mjs` helpers need Node.js + `ffmpeg`/`ffprobe` on `PATH`. Python not required.
-
----
-
-## Pipeline overview
-
-| Phase | What happens |
-|-------|-------------|
-| **1 — Intake** | Detect vague/directed/fully-specified request; confirm orientation, length, voice |
-| **2 — Script** | Draft narration + visual plan + palette; write `workspace/<slug>/script.md`; **wait for approval** |
-| **3 — Synthesize** | Preflight → scaffold → TTS → captions (`captions.mjs`) → timing tables (`assemble.mjs`) → author `index.html` → structural check (`check.mjs`) → draft render + frame check → final render |
-
----
-
-## Included scripts
-
-| Script | What it does |
-|--------|-------------|
-| `tts.mjs` | DashScope sync TTS → `assets/narration.wav` |
-| `captions.mjs` | Character-weight timing → `assets/captions.json` |
-| `assemble.mjs` | Prints paste-ready scene attrs + `var S/SDUR/TOTAL/CAPS` from `captions.json` |
-| `check.mjs` | Structural black-screen guard — asserts the two Non-Negotiables + timing consistency |
-
----
+| Script | Purpose |
+| --- | --- |
+| `preflight.mjs` | Checks the workbench, `.env`, `node`, `ffmpeg`, `ffprobe`, cached HyperFrames CLI, and skeleton availability. |
+| `tts.mjs` | Calls DashScope sync TTS and writes `assets/narration.wav`. |
+| `captions.mjs` | Generates deterministic scene and caption timing from narration text and audio duration. |
+| `assemble.mjs` | Prints paste-ready timing attributes and JS timing tables from `captions.json`. |
+| `check.mjs` | Verifies structural black-screen guards and timing consistency. |
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
