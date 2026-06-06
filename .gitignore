@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# render & diagnostic artifacts
+.diag/
+renders/
+test_videos/
+
+# generated media
+*.wav
+*.mp4
+
+# secrets / local env
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
