@@ -61,11 +61,12 @@ path is the Windows npx cache; on macOS/Linux the cache is `~/.npm/_npx`, but th
 there is to just use the `npx --yes hyperframes@0.6.56 <cmd>` fallback directly.)
 
 ## 4. Where things live
-- Repo root holds `workspace/` (per-video projects), `server/`, `web/`, `test_videos/` (final
-  deliverables), and `.env`.
+- Repo root holds `workspace/` (per-video projects), `server/`, `web/`, `test_videos/` (a common
+  local delivery folder), and `.env`.
 - Each video project is `workspace/<slug>/` with `index.html`, `assets/`, `scripts/`, `renders/`,
   `hyperframes.json`, `package.json`, `meta.json`.
-- Final MP4s are copied into the repo-root `test_videos/` folder (the user's delivery location).
+- Final MP4s must be copied to the user-confirmed output path. Ask for that path if the request does
+  not already specify one; use `test_videos/` only when the user explicitly chooses it.
 - Python (for any helper tooling) — author's path is `D:\PythonVenv\Scripts\python.exe`; set this to
   your own Python if you need it (none of the four `.mjs` scripts require Python).
 

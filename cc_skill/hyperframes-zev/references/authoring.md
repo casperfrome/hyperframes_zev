@@ -115,7 +115,13 @@ on a light bg swap it to your accents, e.g. `linear-gradient(135deg, var(--accen
 
 ---
 
-## 3. Landscape (1920×1080) — deltas from the vertical reference
+## 3. Default orientation — vertical unless requested otherwise
+
+Use vertical `1080×1920` when the user does not specify an aspect ratio, orientation, or custom
+dimensions. The reference composition already uses this portrait frame. Change dimensions only when
+the user explicitly asks for landscape or a custom size.
+
+## 4. Landscape (1920×1080) — deltas from the vertical reference
 
 The reference is vertical 1080×1920. For landscape, change only these; the blocks and the
 one-root-timeline logic are unchanged:
@@ -133,7 +139,7 @@ arrangements so the wide frame isn't empty. Keep heroes/headings centered.
 
 ---
 
-## 4. Design blocks for THIS topic — don't default to the AI-agent vocabulary
+## 5. Design blocks for THIS topic — don't default to the AI-agent vocabulary
 
 The reference's blocks (`big-node` LLM brain, `react-row`, `flow-chip`, `plan-tree`,
 `mem-card`, `tool-grid`, `cycle`, `sum-list`) were built for one explainer about AI agents.
