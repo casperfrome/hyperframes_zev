@@ -3,7 +3,7 @@
 // a missing workspace/ directory. It does not fabricate a missing workbench,
 // secret, toolchain, or skeleton project.
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { sep, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 
@@ -32,7 +32,7 @@ function walkForCli(dir, depth = 0) {
     } catch {
       continue;
     }
-    if (s.isFile() && entry === "cli.js" && full.includes(`${delimiter}hyperframes${delimiter}dist${delimiter}`)) {
+    if (s.isFile() && entry === "cli.js" && full.includes(`${sep}hyperframes${sep}dist${sep}`)) {
       return full;
     }
     if (s.isDirectory()) {
